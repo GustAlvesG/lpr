@@ -65,7 +65,9 @@ $SUDO apt-get install -y \
   ffmpeg \
   libgl1 \
   libglib2.0-0 \
-  liblgpio1 || warn "liblgpio1 indisponível nesta distro — o pip instalará lgpio mesmo assim."
+  swig \
+  liblgpio-dev \
+  liblgpio1 || warn "liblgpio1/liblgpio-dev indisponível nesta distro — tentando sem."
 
 # ----- Checa versão do Python (>= 3.10) -----
 PY_OK=$(python3 -c 'import sys; print(1 if sys.version_info >= (3,10) else 0)')
