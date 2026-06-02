@@ -41,6 +41,25 @@ núcleos) e os mesmos sinks (escrita thread-safe). A deduplicação é **indepen
 
 ## Instalação
 
+### No Raspberry Pi / Linux (recomendado): script automático
+
+Instala dependências de sistema, clona o repositório, cria o ambiente virtual e instala tudo:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GustAlvesG/lpr/main/install.sh | bash
+```
+
+Ou, se já clonou o repositório:
+
+```bash
+chmod +x install.sh
+./install.sh                 # instala em ~/lpr
+./install.sh /opt/lpr        # diretório de instalação personalizado
+./install.sh --service       # instala e habilita autostart no boot (systemd)
+```
+
+### Manual (qualquer sistema)
+
 ```bash
 python -m pip install -r requirements.txt
 ```
