@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:ankandrew.github.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "PowerShell(python --version)",
+      "PowerShell(python -c \"import pytest; print\\('pytest', pytest.__version__\\)\" 2>&1)",
+      "PowerShell(python -c \"import yaml; print\\('yaml ok'\\)\" 2>&1)",
+      "PowerShell(python -m pytest tests/ -v)",
+      "PowerShell(python -m pip index versions onnxruntime 2>&1)",
+      "PowerShell(python -m pip index versions opencv-python 2>&1)",
+      "PowerShell(\"---\")",
+      "PowerShell(python -m py_compile run.py src/__init__.py src/main.py src/config.py src/stream.py src/recognizer.py src/plate_validator.py src/dedupe.py src/sinks.py tests/test_plate_validator.py)",
+      "PowerShell(if \\($?\\) { \"OK: todos os modulos compilaram sem erro de sintaxe\" })",
+      "PowerShell(python -m venv .venv)",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe --version)",
+      "PowerShell(if \\($?\\) { \"venv criado\" })",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe -m pip install --upgrade pip --disable-pip-version-check --quiet)",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe -m pip install -r requirements.txt --disable-pip-version-check)",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe -m pytest tests/ -q)",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe -c \"import cv2, onnxruntime, fast_alpr; print\\('cv2', cv2.__version__\\); print\\('onnxruntime', onnxruntime.__version__\\); from src.recognizer import PlateRecognizer; r = PlateRecognizer\\('yolo-v9-t-384-license-plate-end2end','cct-xs-v2-global-model',0.8\\); print\\('ALPR carregado com sucesso'\\)\")",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe run.py)",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe -m py_compile src/stream.py)",
+      "PowerShell(Test-Connection -ComputerName 192.168.40.252 -Count 2 -Quiet)",
+      "PowerShell(if \\($?\\) { \"stream.py OK\" })",
+      "PowerShell($r = Test-NetConnection -ComputerName 192.168.40.252 -Port 554 -WarningAction SilentlyContinue; \"TcpTestSucceeded: $\\($r.TcpTestSucceeded\\)\"; \"PingSucceeded: $\\($r.PingSucceeded\\)\"; \"InterfaceAlias: $\\($r.InterfaceAlias\\)\"; \"SourceAddress: $\\($r.SourceAddress.IPAddress\\)\")",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe -m py_compile run.py src/main.py src/config.py src/worker.py src/recognizer.py src/sinks.py src/stream.py src/dedupe.py src/plate_validator.py)",
+      "PowerShell(& .\\\\.venv\\\\Scripts\\\\python.exe -c \"from src.config import load_config; c = load_config\\('config.yaml'\\); print\\('cameras:', [\\(cam.name, cam.source\\) for cam in c.cameras]\\)\")",
+      "PowerShell(if \\($?\\) { \"compile OK\" })"
+    ]
+  }
+}

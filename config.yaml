@@ -1,0 +1,57 @@
+# Configuração do sistema de reconhecimento de placas (LPR)
+# Cada câmera tem um 'name' (identificador no registro) e um 'source'
+# (URL RTSP ou caminho de arquivo .mp4 para testes).
+cameras:
+  - name: "entrada"
+    source: "rtsp://lpr:lpr12345@192.168.40.252:554/cam/realmonitor?channel=1&subtype=0"
+  # - name: "saida"
+  #   source: "rtsp://lpr:lpr12345@192.168.40.250:554/cam/realmonitor?channel=1&subtype=0"
+
+# Processamento (otimizado para CPU)
+frame_skip: 5            # processa 1 a cada N frames lidos (alivia a CPU)
+min_confidence: 0.80     # confiança mínima do OCR para aceitar a leitura (0.0 a 1.0)
+
+# Registro
+dedup_window_seconds: 30 # mesma placa não é regravada antes deste intervalo
+validate_br_format: true # só registra placas no formato brasileiro válido (antiga/Mercosul)
+
+# Pré-processamento da imagem (ajuda contra farol/glare e luz irregular)
+preprocess:
+  enabled: true
+  grayscale: true     # converte para preto e branco (mantém 3 canais p/ o detector)
+  clahe: true         # equalização adaptativa de contraste (recupera detalhe no estouro)
+  clahe_clip: 2.0     # limite de contraste do CLAHE (maior = mais agressivo)
+  clahe_grid: 8       # tamanho da grade (tiles) do CLAHE
+  gamma: 1.0          # 1.0 = sem ajuste; >1 clareia placa escura; <1 escurece estouro
+
+# Reconexão do stream
+reconnect_delay_seconds: 5   # espera antes de tentar reabrir o stream após falha
+
+# Modelos do fast-alpr (mantenha os padrões salvo necessidade específica)
+detector_model: "yolo-v9-t-384-license-plate-end2end"
+ocr_model: "cct-xs-v2-global-model"
+
+# Registro local das leituras
+sinks:
+  file:
+    enabled: true
+    path: "output/placas.txt"
+
+# API de autorização: recebe a placa + horário e responde se libera o acesso.
+# Payload enviado (POST JSON): { "placa", "camera", "momento" }
+api:
+  enabled: false
+  url: "https://exemplo/api/acesso"
+  timeout: 5
+  api_key: ""                   # se preenchido, vai no header Authorization: Bearer <api_key>
+  # Como interpretar a resposta para decidir a liberação:
+  auth_field: "autorizado"      # campo no JSON de resposta (vazio = considerar só HTTP 2xx)
+  auth_value: true              # valor que significa "liberar o acesso"
+
+# Acionamento de GPIO no Raspberry Pi quando o acesso é autorizado.
+# Requer 'api.enabled: true'. Fora do Raspberry, o acionamento é apenas simulado.
+gpio:
+  enabled: false
+  pin: 17                       # número do pino no esquema BCM
+  active_high: true             # nível que aciona o relé/portão
+  pulse_seconds: 2              # tempo que mantém o pino acionado por liberação

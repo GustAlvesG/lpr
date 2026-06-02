@@ -1,0 +1,13 @@
+# Reconhecimento de placas (ALPR) local em CPU
+fast-alpr>=0.1.0
+onnxruntime>=1.17.0
+opencv-python>=4.9.0
+PyYAML>=6.0
+requests>=2.31.0
+
+# GPIO do Raspberry Pi (instalado apenas no Linux/Raspberry; ignorado no Windows)
+gpiozero>=2.0 ; platform_system == "Linux"
+lgpio>=0.2.2.0 ; platform_system == "Linux"
+
+# Testes
+pytest>=8.0.0

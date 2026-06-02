@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Saídas geradas em runtime
+output/
+*.log
+
+# Modelos baixados / cache
+.cache/
+*.onnx
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
