@@ -9,14 +9,24 @@
 #   4. (Opcional) Configura um serviço systemd para iniciar no boot.
 #
 # Uso:
-#   ./install.sh                 # instala em ~/lpr
-#   ./install.sh /opt/lpr        # instala no diretório informado
-#   ./install.sh --service       # instala e cria o serviço systemd (autostart)
+#   chmod +x install.sh && ./install.sh           # instala em ~/lpr
+#   chmod +x install.sh && ./install.sh /opt/lpr  # diretório personalizado
+#   chmod +x install.sh && ./install.sh --service # instala + autostart no boot
 #
 # Download direto (sem clonar antes):
 #   curl -fsSL https://raw.githubusercontent.com/GustAlvesG/lpr/main/install.sh | bash
 #
+# Se aparecer "Permission denied" ou "/usr/bin/env: bash\r: not found":
+#   sed -i 's/\r//' install.sh && chmod +x install.sh && ./install.sh
+#
 set -euo pipefail
+
+# Auto-corrige CRLF caso o arquivo venha do Windows sem o .gitattributes aplicado.
+# Só age se o script foi chamado diretamente (não via pipe do curl).
+if [ -f "$0" ] && file "$0" 2>/dev/null | grep -q CRLF; then
+  sed -i 's/\r//' "$0"
+  exec bash "$0" "$@"
+fi
 
 REPO_URL="https://github.com/GustAlvesG/lpr.git"
 
@@ -45,7 +55,7 @@ fi
 
 # ----- 1. Dependências de sistema -----
 log "Instalando dependências de sistema (apt)..."
-$SUDO apt-get update
+$SUDO apt-get update -qq
 $SUDO apt-get install -y \
   git \
   python3 \
@@ -55,7 +65,7 @@ $SUDO apt-get install -y \
   ffmpeg \
   libgl1 \
   libglib2.0-0 \
-  liblgpio1 || warn "liblgpio1 indisponível nesta distro — o pip instalará 'lgpio' mesmo assim."
+  liblgpio1 || warn "liblgpio1 indisponível nesta distro — o pip instalará lgpio mesmo assim."
 
 # ----- Checa versão do Python (>= 3.10) -----
 PY_OK=$(python3 -c 'import sys; print(1 if sys.version_info >= (3,10) else 0)')
@@ -66,7 +76,7 @@ if [ -d "$INSTALL_DIR/.git" ]; then
   log "Repositório já existe em $INSTALL_DIR — atualizando (git pull)..."
   git -C "$INSTALL_DIR" pull --ff-only
 else
-  [ -e "$INSTALL_DIR" ] && die "Caminho $INSTALL_DIR já existe e não é um repositório git."
+  [ -e "$INSTALL_DIR" ] && die "Caminho '$INSTALL_DIR' já existe mas não é um repositório git. Remova-o ou escolha outro diretório."
   log "Clonando $REPO_URL em $INSTALL_DIR..."
   git clone "$REPO_URL" "$INSTALL_DIR"
 fi
@@ -79,9 +89,21 @@ if [ ! -d ".venv" ]; then
   python3 -m venv .venv
 fi
 
-log "Instalando dependências Python (pode baixar modelos no primeiro uso)..."
-./.venv/bin/python -m pip install --upgrade pip
+log "Instalando dependências Python (pode demorar alguns minutos)..."
+./.venv/bin/python -m pip install --upgrade pip --quiet
 ./.venv/bin/python -m pip install -r requirements.txt
+
+# ----- Pré-carrega os modelos ONNX (evita delay no primeiro uso real) -----
+log "Pré-baixando modelos ONNX do fast-alpr..."
+./.venv/bin/python - <<'PY'
+from src.recognizer import PlateRecognizer
+PlateRecognizer(
+    detector_model="yolo-v9-t-384-license-plate-end2end",
+    ocr_model="cct-xs-v2-global-model",
+    min_confidence=0.8,
+)
+print("Modelos prontos.")
+PY
 
 # ----- 4. Serviço systemd (opcional) -----
 if [ "$CREATE_SERVICE" = true ]; then
@@ -107,16 +129,19 @@ WantedBy=multi-user.target
 EOF
   $SUDO systemctl daemon-reload
   $SUDO systemctl enable "${SERVICE_NAME}.service"
-  log "Serviço criado. Inicie com: sudo systemctl start ${SERVICE_NAME}"
-  log "Ver logs com:            journalctl -u ${SERVICE_NAME} -f"
+  log "Serviço habilitado. Para iniciar agora: sudo systemctl start ${SERVICE_NAME}"
+  log "Acompanhar logs:                         journalctl -u ${SERVICE_NAME} -f"
 fi
 
 # ----- Conclusão -----
+echo
 log "Instalação concluída em: $INSTALL_DIR"
 echo
-echo "Próximos passos:"
-echo "  1. Edite a configuração:   nano $INSTALL_DIR/config.yaml"
-echo "  2. Execute manualmente:    cd $INSTALL_DIR && ./.venv/bin/python run.py"
+echo "  Próximos passos:"
+echo "  1. Edite a configuração:  nano $INSTALL_DIR/config.yaml"
+echo "  2. Execute o sistema:     cd $INSTALL_DIR && ./.venv/bin/python run.py"
 if [ "$CREATE_SERVICE" != true ]; then
-  echo "  (autostart no boot:        ./install.sh --service)"
+  echo
+  echo "  Para iniciar no boot automaticamente, rode:"
+  echo "    $INSTALL_DIR/install.sh --service"
 fi

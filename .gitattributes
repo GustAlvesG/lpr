@@ -1,0 +1,7 @@
+# Garante que scripts shell sempre usem LF (Unix) ao fazer checkout,
+# independente do sistema operacional do desenvolvedor.
+*.sh   text eol=lf
+*.py   text eol=lf
+*.yaml text eol=lf
+*.txt  text eol=lf
+*.md   text eol=lf
